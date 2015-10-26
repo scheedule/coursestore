@@ -21,8 +21,8 @@ func printURI(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 }
 
 func main() {
-	http.HandleFunc("/api/", printURI(HandleLookup(mydb)))
-	http.HandleFunc("/api/all/", printURI(HandleAll(mydb)))
+	http.HandleFunc("/lookup", printURI(HandleLookup(mydb)))
+	http.HandleFunc("/all", printURI(HandleAll(mydb)))
 	fmt.Println("Listening")
 	http.ListenAndServe(":7819", nil)
 }
