@@ -26,6 +26,7 @@ func HandleLookup(db *db.DB) func(http.ResponseWriter, *http.Request) {
 		class, err := db.Lookup(department, number)
 		if err != nil {
 			http.NotFound(w, r)
+			return
 		}
 
 		js, err := json.Marshal(class)
