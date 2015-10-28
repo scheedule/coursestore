@@ -9,22 +9,27 @@ import (
 )
 
 type (
+	// Type to unmarshal link xml from UIUC CISAPI
 	Link struct {
 		Href string `xml:"href,attr"`
 	}
 
+	// Type to unmarshal department xml from UIUC CISAPI
 	Department struct {
 		Courses []Link `xml:"courses>course"`
 	}
 
+	// Type to unmarshal term xml from UIUC CISAPI
 	Term struct {
 		Subjects []Link `xml:"subjects>subject"`
 	}
 
+	// Type to unmarshal subject xml from UIUC CISAPI
 	Subject struct {
 		Department string `xml:"id,attr"`
 	}
 
+	// Type to unmarshal course xml from UIUC CISAPI.
 	Course struct {
 		Number   string          `xml:"id,attr"`
 		Name     string          `xml:"label"`

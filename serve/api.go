@@ -8,6 +8,8 @@ import (
 	"net/http"
 )
 
+// This route handles all requests to lookup individual class data. Requests
+// will have a department and number and class data will be returned as JSON.
 func HandleLookup(db *db.DB) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		department := r.FormValue("department")
@@ -40,6 +42,8 @@ func HandleLookup(db *db.DB) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
+// This route handles requests to get all the class data for every class in one
+// request. Data is returned as JSON.
 func HandleAll(db *db.DB) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		classes, err := db.GetAll()

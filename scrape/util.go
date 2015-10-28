@@ -11,10 +11,13 @@ type empty struct{}
 
 var sem chan empty
 
+// Initialize semaphore
 func init() {
 	sem = make(chan empty, 20)
 }
 
+// Process requests to course api. Use semaphore to limit the number of
+// concurrent connections to the api.
 func GetXML(url string) ([]byte, error) {
 
 	// Acquire
@@ -28,6 +31,7 @@ func GetXML(url string) ([]byte, error) {
 	return getXML(url)
 }
 
+// Make request to url and return xml at that url.
 func getXML(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {

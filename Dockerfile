@@ -12,14 +12,11 @@ ENV GOPATH /go
 
 # Grab Source
 COPY . /go/src/github.com/scheedule/coursestore
-COPY start.sh .
 
-# Grab project dependencies
-RUN cd /go/src/github.com/scheedule/coursestore/scrape && go get ./...
-RUN cd /go/src/github.com/scheedule/coursestore/serve && go get ./...
+WORKDIR /go/src/github.com/scheedule/coursestore
 
-# Build Project
-RUN cd /go/src/github.com/scheedule/coursestore/scrape && go install
-RUN cd /go/src/github.com/scheedule/coursestore/serve && go install
+# Grab project dependencies and build
+RUN cd scrape && go get ./... && go install
+RUN cd serve && go get ./... && go install
 
-ENTRYPOINT ["bash", "start.sh"]
+CMD ["/go/bin/serve"]
