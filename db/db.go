@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	// ClassNotFound is thrown when a class can't be resolved.
+	// ClassNotFound is returned when a class can't be resolved.
 	ClassNotFound error = errors.New("Class Not Found")
 )
 
