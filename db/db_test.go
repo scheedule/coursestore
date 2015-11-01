@@ -6,14 +6,14 @@ import (
 )
 
 func TestNewDB(t *testing.T) {
-	mydb := NewDB("localhost", "27017", "test", "test")
+	mydb := NewDB("mongo", "27017", "test", "test")
 	if mydb == nil {
 		t.Fail()
 	}
 }
 
 func TestInit(t *testing.T) {
-	mydb := NewDB("localhost", "27017", "test", "test")
+	mydb := NewDB("mongo", "27017", "test", "test")
 	err := mydb.Init()
 	if err != nil {
 		t.Error("Failed to initialize DB:", err)
@@ -27,7 +27,7 @@ func TestInit(t *testing.T) {
 }
 
 func getDB() *DB {
-	mydb := NewDB("localhost", "27017", "test", "test")
+	mydb := NewDB("mongo", "27017", "test", "test")
 	_ = mydb.Init()
 	return mydb
 }
