@@ -40,7 +40,7 @@ func NewDB(ip, port, db_name, collection_name string) *DB {
 // can't be connected to within a minute.
 func (db *DB) Init() error {
 	// Initiate DB connection
-	session, err := mgo.DialWithTimeout(db.server, time.Minute)
+	session, err := mgo.DialWithTimeout(db.server, 5*time.Second)
 	if err != nil {
 		return err
 	}

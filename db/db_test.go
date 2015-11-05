@@ -2,18 +2,19 @@ package db
 
 import (
 	"github.com/scheedule/coursestore/types"
+	"os"
 	"testing"
 )
 
 func TestNewDB(t *testing.T) {
-	mydb := NewDB("mongo", "27017", "test", "test")
+	mydb := NewDB(os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"), os.Getenv("DB_COLLECTION"))
 	if mydb == nil {
 		t.Fail()
 	}
 }
 
 func TestInit(t *testing.T) {
-	mydb := NewDB("mongo", "27017", "test", "test")
+	mydb := NewDB(os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"), os.Getenv("DB_COLLECTION"))
 	err := mydb.Init()
 	if err != nil {
 		t.Error("Failed to initialize DB:", err)
@@ -27,7 +28,7 @@ func TestInit(t *testing.T) {
 }
 
 func getDB() *DB {
-	mydb := NewDB("mongo", "27017", "test", "test")
+	mydb := NewDB(os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"), os.Getenv("DB_COLLECTION"))
 	_ = mydb.Init()
 	return mydb
 }

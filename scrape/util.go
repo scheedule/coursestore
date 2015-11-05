@@ -1,7 +1,7 @@
-package main
+package scrape
 
 import (
-	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -41,7 +41,7 @@ func getXML(url string) ([]byte, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		fmt.Println("Oops! recieved: ", resp.StatusCode)
+		log.Warn("Oops! recieved: ", resp.StatusCode)
 		time.Sleep(2 * time.Second)
 		resp.Body.Close()
 		return getXML(url)

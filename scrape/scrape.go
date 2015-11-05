@@ -1,8 +1,8 @@
-package main
+package scrape
 
 import (
 	"encoding/xml"
-	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"github.com/scheedule/coursestore/types"
 	"strings"
 	"sync"
@@ -57,7 +57,7 @@ func DigestAll(xml_data []byte, course_chan chan types.Class) {
 
 		wg.Add(1)
 		go digestDepartment(data, course_chan, &wg)
-		fmt.Println("Started: ", link.Href)
+		log.Info("Started: ", link.Href)
 	}
 
 	wg.Wait()

@@ -16,51 +16,18 @@ import (
 	"errors"
 	"github.com/scheedule/coursestore/db"
 	"net/http"
-	"os"
 	"regexp"
 	"strconv"
 )
 
 var (
 	BadRequestError = errors.New("The request was malformed")
-	DBError         = errors.New("Failed to query the database")
+	DBError         = errors.New("Query to database failed.")
 	UnmarshalError  = errors.New("Error unmarshalling data from the database")
 )
 
-// Main db connection to query.
-var mydb *db.DB
-
-// Hostname of database we intend to connect to.
-var HOSTNAME string = func() string {
-	if s := os.Getenv("DB_HOSTNAME"); s != "" {
-		return s
-	}
-	return "mongo"
-}()
-
-// Database name we intend to connect to.
-var DBNAME string = func() string {
-	if s := os.Getenv("DB_NAME"); s != "" {
-		return s
-	}
-	return "test"
-}()
-
-// Collection with classes we wish to query.
-var COLLECTION string = func() string {
-	if s := os.Getenv("DB_COLLECTION"); s != "" {
-		return s
-	}
-	return "classes"
-}()
-
-// Initialize database connection. Will panic if connection fails.
-func init() {
-	mydb = db.NewDB(HOSTNAME, "27017", DBNAME, COLLECTION)
-	err := mydb.Init()
-	if err != nil {
-		panic(err)
-	}
+type Api struct {
+	Mydb *db.DB
 }
 
 // Interrogate values and produce JSON
@@ -121,11 +88,11 @@ func handleError(w http.ResponseWriter, err error) {
 
 // This route handles all requests to lookup individual class data. Requests
 // will have a department and number and class data will be returned as JSON.
-func HandleLookup(w http.ResponseWriter, r *http.Request) {
+func (a *Api) HandleLookup(w http.ResponseWriter, r *http.Request) {
 	department := r.FormValue("department")
 	number := r.FormValue("number")
 
-	js, err := lookupClass(mydb, department, number)
+	js, err := lookupClass(a.Mydb, department, number)
 	if err != nil {
 		handleError(w, err)
 		return
@@ -137,8 +104,8 @@ func HandleLookup(w http.ResponseWriter, r *http.Request) {
 
 // This route handles requests to get all the class data for every class in one
 // request. Data is returned as JSON.
-func HandleAll(w http.ResponseWriter, r *http.Request) {
-	js, err := packClasses(mydb)
+func (a *Api) HandleAll(w http.ResponseWriter, r *http.Request) {
+	js, err := packClasses(a.Mydb)
 	if err != nil {
 		handleError(w, err)
 		return

@@ -8,7 +8,7 @@ type (
 	// Type to unmarshal course types from the UIUC CISAPI
 	CourseType struct {
 		Name string `xml:",chardata"`
-		Code string `xml:"id,attr"`
+		Code string `xml:"code,attr"`
 	}
 
 	// Type to unmarshal meeting data from the UIUC CISAPI

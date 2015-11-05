@@ -16,7 +16,6 @@ COPY . /go/src/github.com/scheedule/coursestore
 WORKDIR /go/src/github.com/scheedule/coursestore
 
 # Grab project dependencies and build
-RUN cd scrape && go get ./... && go install
-RUN cd serve && go get ./... && go install
+RUN go get ./... && go install
 
-CMD ["/go/bin/serve"]
+ENTRYPOINT ["/go/bin/coursestore"]
