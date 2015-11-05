@@ -12,6 +12,12 @@ func emptyCheck(fieldname, str string, t *testing.T) {
 	}
 }
 
+// Error if the instructor contains any empty strings
+func instructorEmptyCheck(instructor types.Instructor, t *testing.T) {
+	emptyCheck("FirstName", instructor.FirstName, t)
+	emptyCheck("LastName", instructor.LastName, t)
+}
+
 // Error if the courseType contains any empty strings
 func courseTypeEmptyCheck(meetingType types.CourseType, t *testing.T) {
 	emptyCheck("Code", meetingType.Code, t)
@@ -24,6 +30,9 @@ func meetingEmptyCheck(meeting types.Meeting, t *testing.T) {
 	emptyCheck("End", meeting.End, t)
 	emptyCheck("Start", meeting.Start, t)
 	courseTypeEmptyCheck(meeting.Type, t)
+	for i := range meeting.Instructors {
+		instructorEmptyCheck(meeting.Instructors[i], t)
+	}
 }
 
 // Error if the section contains any empty strings
@@ -40,6 +49,9 @@ func classEmptyCheck(class types.Class, t *testing.T) {
 	emptyCheck("CourseNumber", class.CourseNumber, t)
 	emptyCheck("Department", class.Department, t)
 	emptyCheck("Name", class.Name, t)
+	emptyCheck("Description", class.Description, t)
+	emptyCheck("CreditHours", class.CreditHours, t)
+	emptyCheck("DegreeAttributes", class.DegreeAttributes, t)
 	for i := range class.Sections {
 		sectionEmptyCheck(class.Sections[i], t)
 	}

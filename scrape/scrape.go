@@ -31,10 +31,13 @@ type (
 
 	// Type to unmarshal course xml from UIUC CISAPI.
 	Course struct {
-		Number   string          `xml:"id,attr"`
-		Name     string          `xml:"label"`
-		Subject  Subject         `xml:"parents>subject"`
-		Sections []types.Section `xml:"detailedSections>detailedSection"`
+		Number           string          `xml:"id,attr"`
+		Name             string          `xml:"label"`
+		Subject          Subject         `xml:"parents>subject"`
+		Description      string          `xml:"description"`
+		CreditHours      string          `xml:"creditHours"`
+		DegreeAttributes string          `xml:"sectionDegreeAttributes"`
+		Sections         []types.Section `xml:"detailedSections>detailedSection"`
 	}
 )
 
@@ -110,10 +113,13 @@ func digestClass(xml_data []byte) (*types.Class, error) {
 
 	// Create Class struct
 	class := &types.Class{
-		Department:   course.Subject.Department,
-		CourseNumber: strings.Split(course.Number, " ")[1],
-		Name:         course.Name,
-		Sections:     course.Sections,
+		Department:       course.Subject.Department,
+		CourseNumber:     strings.Split(course.Number, " ")[1],
+		Name:             course.Name,
+		Description:      course.Description,
+		CreditHours:      course.CreditHours,
+		DegreeAttributes: course.DegreeAttributes,
+		Sections:         course.Sections,
 	}
 
 	return class, nil
