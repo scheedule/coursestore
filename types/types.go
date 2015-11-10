@@ -45,7 +45,7 @@ type (
 		Name             string        `bson:"name"`
 		Description      string        `bson:"description"`
 		CreditHours      string        `bson:"credit_hours"`
-		DegreeAttributes string        `bson:"degree_attributes"`
+		DegreeAttributes []string      `bson:"degree_attributes"`
 		Sections         []Section     `bson:"sections"`
 	}
 )

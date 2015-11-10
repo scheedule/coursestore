@@ -1,12 +1,18 @@
+// Package scrape implements all crawling and parsing associated with getting
+// courses from the course store.
 package scrape
 
 import (
 	"encoding/xml"
 	log "github.com/Sirupsen/logrus"
 	"github.com/scheedule/coursestore/types"
+	"regexp"
 	"strings"
 	"sync"
 )
+
+var normalizeCreditHours_re = regexp.MustCompile(`\d+[\.]*[\d]*`)
+var normalizeDegreeAttributes_re = regexp.MustCompile(`, and |, | course\.`)
 
 type (
 	// Type to unmarshal link xml from UIUC CISAPI
@@ -44,10 +50,11 @@ type (
 // Digest ALL course data from the DB
 // Param: xml_data is list of departments
 func DigestAll(xml_data []byte, course_chan chan types.Class) {
+	log.Debug("Starting term digestion")
 	term := &Term{}
 	err := xml.Unmarshal(xml_data, term)
 	if err != nil {
-		panic(err)
+		log.Fatal("Failed to unmarshal xml:", err)
 	}
 
 	var wg sync.WaitGroup
@@ -55,7 +62,7 @@ func DigestAll(xml_data []byte, course_chan chan types.Class) {
 	for _, link := range term.Subjects {
 		data, err := GetXML(link.Href)
 		if err != nil {
-			panic(err)
+			log.Fatal("Error retrieving xml:", err)
 		}
 
 		wg.Add(1)
@@ -66,6 +73,7 @@ func DigestAll(xml_data []byte, course_chan chan types.Class) {
 	wg.Wait()
 
 	close(course_chan)
+	log.Info("Digestion Complete")
 }
 
 // Digest all courses from a given department
@@ -76,22 +84,53 @@ func digestDepartment(xml_data []byte, course_chan chan types.Class, wg *sync.Wa
 	department := &Department{}
 	err := xml.Unmarshal(xml_data, department)
 	if err != nil {
-		panic(err)
+		log.Fatal("Failed to unmarshal xml:", err)
 	}
 
 	for _, course := range department.Courses {
 		data, err := GetXML(course.Href + "?mode=detail")
 		if err != nil {
-			panic(err)
+			log.Fatal("Error retrieving xml:", err)
 		}
 
 		c, err := digestClass(data)
 		if err != nil {
-			panic(err)
+			log.Fatal("Failed to digest class:", err)
 		}
 
 		course_chan <- *c
 	}
+}
+
+// Extract credit hour numbers from course api string
+func normalizeCreditHours(str string) string {
+	matches := normalizeCreditHours_re.FindAllString(str, -1)
+
+	if len(matches) == 1 {
+		return matches[0]
+	}
+	if len(matches) == 2 {
+		return matches[0] + "-" + matches[1]
+	}
+
+	log.Error("Encountered unmatched credit hour string:", str)
+	return ""
+}
+
+// Extract Degree Attributes from course api string
+func normalizeDegreeAttributes(str string) []string {
+	str = normalizeDegreeAttributes_re.ReplaceAllString(str, ",")
+	split := strings.Split(str, ",")
+
+	result := make([]string, 0, len(str))
+
+	for _, s := range split {
+		if s != "" {
+			result = append(result, s)
+		}
+	}
+
+	return result
 }
 
 // Digest all sections from a given class
@@ -100,6 +139,7 @@ func digestClass(xml_data []byte) (*types.Class, error) {
 	course := &Course{}
 	err := xml.Unmarshal(xml_data, course)
 	if err != nil {
+		log.Error("Failed to unmarshal xml")
 		return nil, err
 	}
 
@@ -117,8 +157,8 @@ func digestClass(xml_data []byte) (*types.Class, error) {
 		CourseNumber:     strings.Split(course.Number, " ")[1],
 		Name:             course.Name,
 		Description:      course.Description,
-		CreditHours:      course.CreditHours,
-		DegreeAttributes: course.DegreeAttributes,
+		CreditHours:      normalizeCreditHours(course.CreditHours),
+		DegreeAttributes: normalizeDegreeAttributes(course.DegreeAttributes),
 		Sections:         course.Sections,
 	}
 

@@ -51,7 +51,7 @@ func classEmptyCheck(class types.Class, t *testing.T) {
 	emptyCheck("Name", class.Name, t)
 	emptyCheck("Description", class.Description, t)
 	emptyCheck("CreditHours", class.CreditHours, t)
-	emptyCheck("DegreeAttributes", class.DegreeAttributes, t)
+	//emptyCheck("DegreeAttributes", class.DegreeAttributes, t)
 	for i := range class.Sections {
 		sectionEmptyCheck(class.Sections[i], t)
 	}

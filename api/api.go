@@ -1,19 +1,12 @@
 // Package api provides all the routes for the webserver to expose. Queries
 // are validated processed.
-//
-// Must set the following environment variables:
-//
-// DB_HOSTNAME: <mongo> The hostname of your db server.
-//
-// DB_NAME: <test> The name of the db you wish to connect to.
-//
-// DB_COLLECTION: <classes> The collection on the database with the class data you need.
 package api
 
 import (
 	"compress/gzip"
 	"encoding/json"
 	"errors"
+	log "github.com/Sirupsen/logrus"
 	"github.com/scheedule/coursestore/db"
 	"net/http"
 	"regexp"
@@ -26,6 +19,7 @@ var (
 	UnmarshalError  = errors.New("Error unmarshalling data from the database")
 )
 
+// Type Api contains the database to query and functions we use to query it
 type Api struct {
 	Mydb *db.DB
 }
@@ -39,20 +33,24 @@ func lookupClass(db *db.DB, department, number string) ([]byte, error) {
 
 	matched, err := regexp.MatchString("^[A-Z]*$", department)
 	if !matched || err != nil {
+		log.Warn("Failed to match department: ", err)
 		return nil, BadRequestError
 	}
 
 	if _, err := strconv.Atoi(number); err != nil {
+		log.Warn("Failed to match course number: ", err)
 		return nil, BadRequestError
 	}
 
 	class, err := db.Lookup(department, number)
 	if err != nil {
+		log.Warn("DB Lookup Failed: ", err)
 		return nil, DBError
 	}
 
 	js, err := json.Marshal(class)
 	if err != nil {
+		log.Error("Class Unmarshal Failed: ", err)
 		return nil, UnmarshalError
 	}
 
@@ -63,11 +61,13 @@ func lookupClass(db *db.DB, department, number string) ([]byte, error) {
 func packClasses(db *db.DB) ([]byte, error) {
 	classes, err := db.GetAll()
 	if err != nil {
+		log.Error("Failed to query all classes: ", err)
 		return nil, DBError
 	}
 
 	js, err := json.Marshal(classes)
 	if err != nil {
+		log.Error("Failed to Unmarshal all classes: ", err)
 		return nil, UnmarshalError
 	}
 
@@ -92,8 +92,11 @@ func (a *Api) HandleLookup(w http.ResponseWriter, r *http.Request) {
 	department := r.FormValue("department")
 	number := r.FormValue("number")
 
+	log.Debug("Looking up: ", department, number)
+
 	js, err := lookupClass(a.Mydb, department, number)
 	if err != nil {
+		log.Debug("Lookup resulted in error:", err)
 		handleError(w, err)
 		return
 	}
@@ -107,6 +110,7 @@ func (a *Api) HandleLookup(w http.ResponseWriter, r *http.Request) {
 func (a *Api) HandleAll(w http.ResponseWriter, r *http.Request) {
 	js, err := packClasses(a.Mydb)
 	if err != nil {
+		log.Debug("HandleAll resulted in error:", err)
 		handleError(w, err)
 		return
 	}

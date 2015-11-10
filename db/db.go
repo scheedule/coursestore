@@ -6,6 +6,7 @@ package db
 
 import (
 	"errors"
+	log "github.com/Sirupsen/logrus"
 	"github.com/scheedule/coursestore/types"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -77,6 +78,7 @@ func (db *DB) Lookup(department, number string) (*types.Class, error) {
 	}).One(temp)
 
 	if err != nil {
+		log.Error("Class not found: ", err)
 		return nil, ClassNotFound
 	}
 

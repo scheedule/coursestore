@@ -1,6 +1,7 @@
 package commands
 
 import (
+	log "github.com/Sirupsen/logrus"
 	"github.com/scheedule/coursestore/db"
 	scrape_lib "github.com/scheedule/coursestore/scrape"
 	"github.com/scheedule/coursestore/types"
@@ -15,7 +16,7 @@ var scrape = &cobra.Command{
 		InitializeConfig()
 
 		if err := PopulateDB(termUrl, db_host, db_port, database, collection); err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 	},
 }
@@ -48,6 +49,7 @@ func PopulateDB(term_url, ip, port, db_name, collection_name string) error {
 		return err
 	}
 
+	log.Debug("Purging database")
 	mydb.Purge()
 
 	term, err := scrape_lib.GetXML(term_url)
@@ -62,6 +64,8 @@ func PopulateDB(term_url, ip, port, db_name, collection_name string) error {
 			return err
 		}
 	}
+
+	log.Debug("Finished populating database")
 
 	return nil
 }

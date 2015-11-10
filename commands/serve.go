@@ -10,6 +10,7 @@ import (
 
 var myapi *api.Api
 
+// Main command to be executed. Serves coursestore endpoint.
 var serve = &cobra.Command{
 	Use:   "serve",
 	Short: "Serve Course Endpoint",
@@ -19,7 +20,10 @@ var serve = &cobra.Command{
 
 		// Create DB Object
 		mydb := db.NewDB(db_host, db_port, database, collection)
-		mydb.Init()
+		err := mydb.Init()
+		if err != nil {
+			log.Fatal("Failed to initialize database connection:", err)
+		}
 
 		// API Object
 		myapi = &api.Api{mydb}
