@@ -2,10 +2,11 @@ package commands
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
-var version = &cobra.Command{
+var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of Coursestore",
 	Long:  `This is the version of Coursestore`,

@@ -1,54 +1,56 @@
 package commands
 
 import (
+	"net/http"
+
 	log "github.com/Sirupsen/logrus"
+	"github.com/spf13/cobra"
+
 	"github.com/scheedule/coursestore/api"
 	"github.com/scheedule/coursestore/db"
-	"github.com/spf13/cobra"
-	"net/http"
 )
 
-var myapi *api.Api
+var myAPI *api.API
 
 // Main command to be executed. Serves coursestore endpoint.
-var serve = &cobra.Command{
+var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Serve Course Endpoint",
 	Long:  "Start serving course data via routes /lookup and /all",
 	Run: func(cmd *cobra.Command, args []string) {
-		InitializeConfig()
+		initializeConfig()
 
 		// Create DB Object
-		mydb := db.NewDB(db_host, db_port, database, collection)
-		err := mydb.Init()
+		myDB := db.New(dbHost, dbPort, database, collection)
+		err := myDB.Init()
 		if err != nil {
 			log.Fatal("Failed to initialize database connection:", err)
 		}
 
 		// API Object
-		myapi = &api.Api{mydb}
+		myAPI = &api.API{myDB}
 
-		http.HandleFunc("/lookup", printURI(myapi.HandleLookup))
-		http.HandleFunc("/all", printURI(myapi.HandleAll))
-		log.Info("Serving on port:", serve_port)
-		http.ListenAndServe(":"+serve_port, nil)
+		http.HandleFunc("/lookup", printURI(myAPI.HandleLookup))
+		http.HandleFunc("/all", printURI(myAPI.HandleAll))
+		log.Info("Serving on port:", servePort)
+		http.ListenAndServe(":"+servePort, nil)
 	},
 }
 
 func init() {
-	serve.Flags().StringVarP(
-		&db_host, "db_host", "", "localhost", "Hostname of DB to insert into.")
+	serveCmd.Flags().StringVarP(
+		&dbHost, "db_host", "", "localhost", "Hostname of DB to insert into.")
 
-	serve.Flags().StringVarP(
-		&db_port, "db_port", "", "27017", "Port to access DB on.")
+	serveCmd.Flags().StringVarP(
+		&dbPort, "db_port", "", "27017", "Port to access DB on.")
 
-	serve.Flags().StringVarP(
-		&serve_port, "serve_port", "", "7819", "Port to serve endpoint on.")
+	serveCmd.Flags().StringVarP(
+		&servePort, "serve_port", "", "7819", "Port to serve endpoint on.")
 
-	serve.Flags().StringVarP(
+	serveCmd.Flags().StringVarP(
 		&database, "db_name", "", "test", "Database name.")
 
-	serve.Flags().StringVarP(
+	serveCmd.Flags().StringVarP(
 		&collection, "db_collection", "", "classes", "Collection in database to insert classes.")
 }
 

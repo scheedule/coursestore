@@ -2,70 +2,71 @@ package commands
 
 import (
 	log "github.com/Sirupsen/logrus"
-	"github.com/scheedule/coursestore/db"
-	scrape_lib "github.com/scheedule/coursestore/scrape"
-	"github.com/scheedule/coursestore/types"
 	"github.com/spf13/cobra"
+
+	"github.com/scheedule/coursestore/db"
+	"github.com/scheedule/coursestore/scrape"
+	"github.com/scheedule/coursestore/types"
 )
 
-var scrape = &cobra.Command{
+var scrapeCmd = &cobra.Command{
 	Use:   "scrape",
 	Short: "Fetch courses",
 	Long:  "Fetch courses from from course API by scraping and parsing XML",
 	Run: func(cmd *cobra.Command, args []string) {
-		InitializeConfig()
+		initializeConfig()
 
-		if err := PopulateDB(termUrl, db_host, db_port, database, collection); err != nil {
+		if err := PopulateDB(termURL, dbHost, dbPort, database, collection); err != nil {
 			log.Fatal(err)
 		}
 	},
 }
 
 func init() {
-	scrape.Flags().StringVarP(
-		&termUrl, "term_url", "t",
+	scrapeCmd.Flags().StringVarP(
+		&termURL, "term_url", "t",
 		"http://courses.illinois.edu/cisapp/explorer/schedule/2016/spring.xml",
 		"URL to term XML.")
 
-	scrape.Flags().StringVarP(
-		&db_host, "host", "", "localhost", "Hostname of DB to insert into.")
+	scrapeCmd.Flags().StringVarP(
+		&dbHost, "host", "", "localhost", "Hostname of DB to insert into.")
 
-	scrape.Flags().StringVarP(
-		&db_port, "port", "p", "27017", "Port to access DB on.")
+	scrapeCmd.Flags().StringVarP(
+		&dbPort, "port", "p", "27017", "Port to access DB on.")
 
-	scrape.Flags().StringVarP(
+	scrapeCmd.Flags().StringVarP(
 		&database, "db", "", "test", "Database name.")
 
-	scrape.Flags().StringVarP(
+	scrapeCmd.Flags().StringVarP(
 		&collection, "collection", "", "classes", "Collection in database to insert classes.")
 }
 
-// Populate the selected database with the data scraped from the TERM_URL.
-func PopulateDB(term_url, ip, port, db_name, collection_name string) error {
-	mydb := db.NewDB(ip, port, db_name, collection_name)
+// Populate the selected database with the data scraped from the term URL.
+func PopulateDB(termURL, ip, port, dbName, collectionName string) error {
+	myDB := db.New(ip, port, dbName, collectionName)
 
-	err := mydb.Init()
+	err := myDB.Init()
 	if err != nil {
 		return err
 	}
 
-	log.Debug("Purging database")
-	mydb.Purge()
+	log.Debug("purging database")
+	myDB.Purge()
 
-	term, err := scrape_lib.GetXML(term_url)
+	term, err := scrape.GetXML(termURL)
 
-	course_chan := make(chan types.Class)
+	courseChan := make(chan types.Class)
 
-	go scrape_lib.DigestAll(term, course_chan)
+	go scrape.DigestAll(term, courseChan)
 
-	for class := range course_chan {
-		err = mydb.Put(class)
+	for class := range courseChan {
+		err = myDB.Put(class)
 		if err != nil {
 			return err
 		}
 	}
 
-	log.Debug("Finished populating database")
+	log.Debug("finished populating database")
 
 	return nil
 }

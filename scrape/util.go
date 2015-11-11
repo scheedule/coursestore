@@ -1,10 +1,11 @@
 package scrape
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 type empty struct{}
@@ -16,8 +17,8 @@ func init() {
 	sem = make(chan empty, 20)
 }
 
-// Process requests to course api. Use semaphore to limit the number of
-// concurrent connections to the api.
+// Process requests to course API. Use semaphore to limit the number of
+// concurrent connections to the API.
 func GetXML(url string) ([]byte, error) {
 
 	// Acquire
@@ -31,7 +32,7 @@ func GetXML(url string) ([]byte, error) {
 	return getXML(url)
 }
 
-// Make request to url and return xml at that url.
+// Make request to url and return XML at that url.
 func getXML(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -42,7 +43,7 @@ func getXML(url string) ([]byte, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		log.Warn("Oops! recieved: ", resp.StatusCode)
+		log.Warn("oops! recieved: ", resp.StatusCode)
 		time.Sleep(2 * time.Second)
 		resp.Body.Close()
 		return getXML(url)
@@ -50,7 +51,7 @@ func getXML(url string) ([]byte, error) {
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Error("Failed to read response body.", err)
+		log.Error("failed to read response body: ", err)
 		return nil, err
 	}
 

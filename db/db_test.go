@@ -1,36 +1,37 @@
 package db
 
 import (
-	"github.com/scheedule/coursestore/types"
 	"os"
 	"testing"
+
+	"github.com/scheedule/coursestore/types"
 )
 
 func TestNewDB(t *testing.T) {
-	mydb := NewDB(os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"), os.Getenv("DB_COLLECTION"))
-	if mydb == nil {
+	myDB := New(os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"), os.Getenv("DB_COLLECTION"))
+	if myDB == nil {
 		t.Fail()
 	}
 }
 
 func TestInit(t *testing.T) {
-	mydb := NewDB(os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"), os.Getenv("DB_COLLECTION"))
-	err := mydb.Init()
+	myDB := New(os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"), os.Getenv("DB_COLLECTION"))
+	err := myDB.Init()
 	if err != nil {
 		t.Error("Failed to initialize DB:", err)
 	}
-	if mydb.session == nil {
+	if myDB.session == nil {
 		t.Error("Session is nil")
 	}
-	if mydb.collection == nil {
+	if myDB.collection == nil {
 		t.Error("Collection is nil")
 	}
 }
 
 func getDB() *DB {
-	mydb := NewDB(os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"), os.Getenv("DB_COLLECTION"))
-	_ = mydb.Init()
-	return mydb
+	myDB := New(os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"), os.Getenv("DB_COLLECTION"))
+	_ = myDB.Init()
+	return myDB
 }
 
 var sampleClass = types.Class{
@@ -39,10 +40,10 @@ var sampleClass = types.Class{
 }
 
 func TestPurge(t *testing.T) {
-	mydb := getDB()
-	mydb.Put(sampleClass)
-	mydb.Purge()
-	classes, err := mydb.GetAll()
+	myDB := getDB()
+	myDB.Put(sampleClass)
+	myDB.Purge()
+	classes, err := myDB.GetAll()
 	if err != nil {
 		t.Error(err)
 	}
@@ -58,30 +59,30 @@ func TestClose(t *testing.T) {
 		}
 	}()
 
-	mydb := getDB()
-	mydb.Close()
-	_ = mydb.session.Ping()
+	myDB := getDB()
+	myDB.Close()
+	_ = myDB.session.Ping()
 }
 
 func TestPut(t *testing.T) {
-	mydb := getDB()
-	mydb.Purge()
+	myDB := getDB()
+	myDB.Purge()
 
-	err := mydb.Put(sampleClass)
+	err := myDB.Put(sampleClass)
 	if err != nil {
 		t.Error("Put returned error: ", err)
 	}
 }
 
 func TestLookup(t *testing.T) {
-	mydb := getDB()
-	mydb.Purge()
+	myDB := getDB()
+	myDB.Purge()
 
-	err := mydb.Put(sampleClass)
+	err := myDB.Put(sampleClass)
 	if err != nil {
 		t.Error("Put returned error: ", err)
 	}
-	class, err := mydb.Lookup("CS", "125")
+	class, err := myDB.Lookup("CS", "125")
 	if err != nil {
 		t.Error("Class lookup returned error: ", err)
 	}
@@ -91,11 +92,11 @@ func TestLookup(t *testing.T) {
 }
 
 func TestGetAll(t *testing.T) {
-	mydb := getDB()
-	mydb.Purge()
+	myDB := getDB()
+	myDB.Purge()
 
 	for i := 0; i < 10; i++ {
-		err := mydb.Put(types.Class{
+		err := myDB.Put(types.Class{
 			Department: string(i),
 		})
 		if err != nil {
@@ -103,7 +104,7 @@ func TestGetAll(t *testing.T) {
 		}
 	}
 
-	classes, err := mydb.GetAll()
+	classes, err := myDB.GetAll()
 	if err != nil {
 		t.Error("GetAll resulted in error: ", err)
 	}

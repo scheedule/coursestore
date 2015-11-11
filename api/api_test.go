@@ -1,13 +1,14 @@
 package api
 
 import (
-	"github.com/scheedule/coursestore/db"
-	"github.com/scheedule/coursestore/types"
 	"os"
 	"testing"
+
+	"github.com/scheedule/coursestore/db"
+	"github.com/scheedule/coursestore/types"
 )
 
-var myApi *Api
+var myAPI *API
 
 var sampleClass = types.Class{
 	Department:   "CS",
@@ -15,9 +16,9 @@ var sampleClass = types.Class{
 }
 
 func init() {
-	mydb := db.NewDB(os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"), os.Getenv("DB_COLLECTION"))
-	mydb.Init()
-	myApi = &Api{mydb}
+	myDB := db.New(os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"), os.Getenv("DB_COLLECTION"))
+	myDB.Init()
+	myAPI = &API{myDB}
 }
 
 func failWithExpectedError(t *testing.T, expectation, result error) {
@@ -25,52 +26,52 @@ func failWithExpectedError(t *testing.T, expectation, result error) {
 }
 
 func TestLookupClass(t *testing.T) {
-	myApi.Mydb.Purge()
+	myAPI.DB.Purge()
 	var err error
 
 	// Send empty values
 	t.Log("Testing empty values")
-	if _, err = lookupClass(myApi.Mydb, "", ""); err != BadRequestError {
+	if _, err = myAPI.lookupClass("", ""); err != BadRequestError {
 		failWithExpectedError(t, BadRequestError, err)
 	}
 
 	// Send one empty value
 	t.Log("Testing one empty value")
-	if _, err = lookupClass(myApi.Mydb, "CS", ""); err != BadRequestError {
+	if _, err = myAPI.lookupClass("CS", ""); err != BadRequestError {
 		failWithExpectedError(t, BadRequestError, err)
 	}
-	if _, err = lookupClass(myApi.Mydb, "", "125"); err != BadRequestError {
+	if _, err = myAPI.lookupClass("", "125"); err != BadRequestError {
 		failWithExpectedError(t, BadRequestError, err)
 	}
 
 	// Send invalid department
 	t.Log("Testing invalid department")
-	if _, err = lookupClass(myApi.Mydb, "hello", "125"); err != BadRequestError {
+	if _, err = myAPI.lookupClass("hello", "125"); err != BadRequestError {
 		failWithExpectedError(t, BadRequestError, err)
 	}
-	if _, err = lookupClass(myApi.Mydb, "125", "125"); err != BadRequestError {
+	if _, err = myAPI.lookupClass("125", "125"); err != BadRequestError {
 		failWithExpectedError(t, BadRequestError, err)
 	}
 
 	// Send invalid course number
 	t.Log("Testing invalid course number")
-	if _, err = lookupClass(myApi.Mydb, "CS", "!!!"); err != BadRequestError {
+	if _, err = myAPI.lookupClass("CS", "!!!"); err != BadRequestError {
 		failWithExpectedError(t, BadRequestError, err)
 	}
-	if _, err = lookupClass(myApi.Mydb, "CS", "\"Hello\""); err != BadRequestError {
+	if _, err = myAPI.lookupClass("CS", "\"Hello\""); err != BadRequestError {
 		failWithExpectedError(t, BadRequestError, err)
 	}
 
 	// Test DB access
 	t.Log("Testing DB Access")
-	err = myApi.Mydb.Put(sampleClass)
+	err = myAPI.DB.Put(sampleClass)
 	if err != nil {
 		t.Error("Putting class in db failed", err)
 	}
-	if _, err = myApi.Mydb.Lookup("CS", "125"); err != nil {
+	if _, err = myAPI.DB.Lookup("CS", "125"); err != nil {
 		t.Error("Error upon looking up class", err)
 	}
-	if class, err := myApi.Mydb.Lookup("CS", "225"); err == nil || class != nil {
+	if class, err := myAPI.DB.Lookup("CS", "225"); err == nil || class != nil {
 		t.Errorf("Lookup of unknown course resulted in class: %q and err: %q",
 			class, err)
 	}
@@ -79,11 +80,11 @@ func TestLookupClass(t *testing.T) {
 func TestPackClasses(t *testing.T) {
 
 	// Clear database
-	myApi.Mydb.Purge()
+	myAPI.DB.Purge()
 
 	// Put data into the database
 	for i := 0; i < 10; i++ {
-		err := myApi.Mydb.Put(types.Class{
+		err := myAPI.DB.Put(types.Class{
 			Department: string(i),
 		})
 		if err != nil {
@@ -91,7 +92,7 @@ func TestPackClasses(t *testing.T) {
 		}
 	}
 
-	classes, err := myApi.Mydb.GetAll()
+	classes, err := myAPI.DB.GetAll()
 	if err != nil {
 		t.Error("GetAll classes returned with: ", err)
 	}

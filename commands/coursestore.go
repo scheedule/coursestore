@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var CoursestoreCmd = &cobra.Command{
+var coursestoreCmd = &cobra.Command{
 	Use:   "coursestore",
 	Short: "Course data endpoint",
 	Long: "Coursestore is an endpoint that fetches and serves course" +
@@ -15,29 +15,29 @@ var CoursestoreCmd = &cobra.Command{
 	},
 }
 
-var Verbose bool
-var termUrl, serve_port, db_host, db_port, database, collection string
+var verbose bool
+var termURL, servePort, dbHost, dbPort, database, collection string
 
 //Initializes flags
 func init() {
-	CoursestoreCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
+	coursestoreCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 }
 
-func AddCommands() {
-	CoursestoreCmd.AddCommand(version)
-	CoursestoreCmd.AddCommand(scrape)
-	CoursestoreCmd.AddCommand(serve)
+func addCommands() {
+	coursestoreCmd.AddCommand(versionCmd)
+	coursestoreCmd.AddCommand(scrapeCmd)
+	coursestoreCmd.AddCommand(serveCmd)
 }
 
-func InitializeConfig() {
-	if Verbose {
+func initializeConfig() {
+	if verbose {
 		log.SetLevel(log.InfoLevel)
 	}
 }
 
 func Execute() {
-	AddCommands()
-	if err := CoursestoreCmd.Execute(); err != nil {
+	addCommands()
+	if err := coursestoreCmd.Execute(); err != nil {
 		panic(err)
 	}
 }

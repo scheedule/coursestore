@@ -6,11 +6,13 @@ package db
 
 import (
 	"errors"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
-	"github.com/scheedule/coursestore/types"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"time"
+
+	"github.com/scheedule/coursestore/types"
 )
 
 var (
@@ -21,19 +23,19 @@ var (
 // Main primitive to hold db connection and attributes. Users will obtain
 // and make requests with the DB type.
 type DB struct {
-	session         *mgo.Session
-	collection      *mgo.Collection
-	server          string
-	db_name         string
-	collection_name string
+	session        *mgo.Session
+	collection     *mgo.Collection
+	server         string
+	dbName         string
+	collectionName string
 }
 
 // Construct a new DB type
-func NewDB(ip, port, db_name, collection_name string) *DB {
+func New(ip, port, dbName, collectionName string) *DB {
 	return &DB{
-		server:          ip + ":" + port,
-		db_name:         db_name,
-		collection_name: collection_name,
+		server:         ip + ":" + port,
+		dbName:         dbName,
+		collectionName: collectionName,
 	}
 }
 
@@ -49,7 +51,7 @@ func (db *DB) Init() error {
 	db.session = session
 
 	// Establish Session
-	db.collection = db.session.DB(db.db_name).C(db.collection_name)
+	db.collection = db.session.DB(db.dbName).C(db.collectionName)
 
 	return nil
 }
@@ -78,7 +80,7 @@ func (db *DB) Lookup(department, number string) (*types.Class, error) {
 	}).One(temp)
 
 	if err != nil {
-		log.Error("Class not found: ", err)
+		log.Error("class not found: ", err)
 		return nil, ClassNotFound
 	}
 

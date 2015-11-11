@@ -1,8 +1,9 @@
 package scrape
 
 import (
-	"github.com/scheedule/coursestore/types"
 	"testing"
+
+	"github.com/scheedule/coursestore/types"
 )
 
 // Error if the string is empty
