@@ -10,7 +10,7 @@ import (
 	"github.com/scheedule/coursestore/db"
 )
 
-var myAPI *api.API
+var serveAPI *api.API
 
 // Main command to be executed. Serves coursestore endpoint.
 var serveCmd = &cobra.Command{
@@ -21,17 +21,17 @@ var serveCmd = &cobra.Command{
 		initializeConfig()
 
 		// Create DB Object
-		myDB := db.New(dbHost, dbPort, database, collection)
-		err := myDB.Init()
+		serveDB := db.New(dbHost, dbPort, database, collection)
+		err := serveDB.Init()
 		if err != nil {
 			log.Fatal("Failed to initialize database connection:", err)
 		}
 
 		// API Object
-		myAPI = &api.API{myDB}
+		serveAPI = api.New(serveDB)
 
-		http.HandleFunc("/lookup", printURI(myAPI.HandleLookup))
-		http.HandleFunc("/all", printURI(myAPI.HandleAll))
+		http.HandleFunc("/lookup", printURI(serveAPI.HandleLookup))
+		http.HandleFunc("/all", printURI(serveAPI.HandleAll))
 		log.Info("Serving on port:", servePort)
 		http.ListenAndServe(":"+servePort, nil)
 	},

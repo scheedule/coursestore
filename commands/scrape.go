@@ -43,15 +43,15 @@ func init() {
 
 // Populate the selected database with the data scraped from the term URL.
 func PopulateDB(termURL, ip, port, dbName, collectionName string) error {
-	myDB := db.New(ip, port, dbName, collectionName)
+	scrapeDB := db.New(ip, port, dbName, collectionName)
 
-	err := myDB.Init()
+	err := scrapeDB.Init()
 	if err != nil {
 		return err
 	}
 
 	log.Debug("purging database")
-	myDB.Purge()
+	scrapeDB.Purge()
 
 	term, err := scrape.GetXML(termURL)
 
@@ -60,7 +60,7 @@ func PopulateDB(termURL, ip, port, dbName, collectionName string) error {
 	go scrape.DigestAll(term, courseChan)
 
 	for class := range courseChan {
-		err = myDB.Put(class)
+		err = scrapeDB.Put(class)
 		if err != nil {
 			return err
 		}
