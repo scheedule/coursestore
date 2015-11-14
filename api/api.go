@@ -16,9 +16,9 @@ import (
 )
 
 var (
-	BadRequestError = errors.New("The request was malformed.")
-	DBError         = errors.New("Query to database failed.")
-	UnmarshalError  = errors.New("Error unmarshalling data from the database.")
+	BadRequestError = errors.New("The request was malformed")
+	DBError         = errors.New("Query to database failed")
+	UnmarshalError  = errors.New("Error unmarshalling data from the database")
 	errorMap        = map[error]int{
 		BadRequestError: http.StatusBadRequest,
 		DBError:         http.StatusNotFound,
@@ -42,12 +42,10 @@ func (a *API) HandleLookup(w http.ResponseWriter, r *http.Request) {
 	number := r.FormValue("number")
 
 	if !isValidDepartment(department) || !isValidCourseNumber(number) {
-		log.Debug("query does not contain properly formatted dept/num combination.", BadRequestError)
+		log.Debug("query does not contain properly formatted dept/num combination")
 		handleError(w, BadRequestError)
 		return
 	}
-
-	log.Debug("querying: ", department, number)
 
 	class, err := a.db.Lookup(department, number)
 	if err != nil {
@@ -70,7 +68,14 @@ func (a *API) HandleLookup(w http.ResponseWriter, r *http.Request) {
 // This route handles requests to get all the class data for every class in one
 // request. Data is returned as JSON.
 func (a *API) HandleAll(w http.ResponseWriter, r *http.Request) {
-	classes, err := a.db.GetAll()
+	var detailLevel = db.DetailBasic
+
+	detail := r.FormValue("detail")
+	if detail == "complete" {
+		detailLevel = db.DetailComplete
+	}
+
+	classes, err := a.db.GetAll(detailLevel)
 	if err != nil {
 		log.Error("failed to query all classes: ", err)
 		handleError(w, DBError)
@@ -83,6 +88,11 @@ func (a *API) HandleAll(w http.ResponseWriter, r *http.Request) {
 		handleError(w, UnmarshalError)
 		return
 	}
+
+	/*
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+	*/
 
 	w.Header().Set("Content-Encoding", "gzip")
 	gz := gzip.NewWriter(w)
