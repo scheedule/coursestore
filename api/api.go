@@ -16,13 +16,21 @@ import (
 )
 
 var (
+	// BadReqeustError returned when request did not arrive in an expected format
 	BadRequestError = errors.New("The request was malformed")
-	DBError         = errors.New("Query to database failed")
-	UnmarshalError  = errors.New("Error unmarshalling data from the database")
-	errorMap        = map[error]int{
+
+	// DBError returned anytime the database fails to retrieve/store/update a record
+	DBError = errors.New("Query to database failed")
+
+	// DecodeError returned whenever we fail to decode data from the database or
+	// an incoming request.
+	DecodeError = errors.New("Error unmarshalling data from the database")
+
+	// Mapping of errors to respective HTTP status codes
+	errorMap = map[error]int{
 		BadRequestError: http.StatusBadRequest,
 		DBError:         http.StatusNotFound,
-		UnmarshalError:  http.StatusInternalServerError,
+		DecodeError:     http.StatusInternalServerError,
 	}
 )
 
@@ -31,6 +39,7 @@ type API struct {
 	db *db.DB
 }
 
+// Construct a new API object with a pointer to a database to query.
 func New(db *db.DB) *API {
 	return &API{db}
 }
@@ -56,8 +65,8 @@ func (a *API) HandleLookup(w http.ResponseWriter, r *http.Request) {
 
 	js, err := json.Marshal(class)
 	if err != nil {
-		log.Error("class unmarshal failed: ", err)
-		handleError(w, UnmarshalError)
+		log.Error("class marshal failed: ", err)
+		handleError(w, DecodeError)
 		return
 	}
 
@@ -84,8 +93,8 @@ func (a *API) HandleAll(w http.ResponseWriter, r *http.Request) {
 
 	js, err := json.Marshal(classes)
 	if err != nil {
-		log.Error("failed to unmarshal all classes: ", err)
-		handleError(w, UnmarshalError)
+		log.Error("failed to marshal all classes: ", err)
+		handleError(w, DecodeError)
 		return
 	}
 
@@ -121,6 +130,7 @@ func isValidDepartment(department string) bool {
 	return true
 }
 
+// Return true if and only if the course number is formatted correctly.
 func isValidCourseNumber(number string) bool {
 	// Check empty
 	if number == "" {
