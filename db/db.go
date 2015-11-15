@@ -24,8 +24,7 @@ var (
 	InternalError error = errors.New("Internal Database Error")
 
 	// Detail levels
-	DetailComplete = bson.M{"_id": "0"}
-	DetailBasic    = bson.M{
+	DetailBasic = bson.M{
 		"department":              "1",
 		"course_number":           "1",
 		"name":                    "1",

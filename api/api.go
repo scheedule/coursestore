@@ -3,6 +3,7 @@
 package api
 
 import (
+	"bytes"
 	"compress/gzip"
 	"encoding/json"
 	"errors"
@@ -36,12 +37,60 @@ var (
 
 // Type API contains the database to query and functions we use to query it.
 type API struct {
-	db *db.DB
+	db    *db.DB
+	cache map[string][]byte
 }
 
 // Construct a new API object with a pointer to a database to query.
-func New(db *db.DB) *API {
-	return &API{db}
+func New(database *db.DB) *API {
+	// Load the cache
+	cache := make(map[string][]byte)
+
+	data, err := compressAll(database, db.DetailBasic)
+	if err != nil {
+		log.Fatal("failed to compress all data")
+	}
+	cache["all_basic"] = data
+
+	data, err = compressAll(database, nil)
+	if err != nil {
+		log.Fatal("failed to compress all data")
+	}
+	cache["all_complete"] = data
+
+	return &API{database, cache}
+}
+
+func compressAll(database *db.DB, detail map[string]interface{}) ([]byte, error) {
+	classes, err := database.GetAll(detail)
+	if err != nil {
+		log.Error("failed to query all classes: ", err)
+		return nil, err
+	}
+
+	js, err := json.Marshal(classes)
+	if err != nil {
+		log.Error("failed to marshal all classes: ", err)
+		return nil, err
+	}
+
+	var buf bytes.Buffer
+	gz := gzip.NewWriter(&buf)
+	defer gz.Close()
+
+	_, err = gz.Write(js)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = gz.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	data := buf.Bytes()
+
+	return data, nil
 }
 
 // This route handles all requests to lookup individual class data. Requests
@@ -77,36 +126,18 @@ func (a *API) HandleLookup(w http.ResponseWriter, r *http.Request) {
 // This route handles requests to get all the class data for every class in one
 // request. Data is returned as JSON.
 func (a *API) HandleAll(w http.ResponseWriter, r *http.Request) {
-	var detailLevel = db.DetailBasic
-
-	detail := r.FormValue("detail")
-	if detail == "complete" {
-		detailLevel = db.DetailComplete
+	dataKey := "all_basic"
+	if r.FormValue("detail") == "complete" {
+		dataKey = "all_complete"
 	}
 
-	classes, err := a.db.GetAll(detailLevel)
-	if err != nil {
-		log.Error("failed to query all classes: ", err)
-		handleError(w, DBError)
-		return
-	}
+	log.Debug("dataKey: ", dataKey)
 
-	js, err := json.Marshal(classes)
-	if err != nil {
-		log.Error("failed to marshal all classes: ", err)
-		handleError(w, DecodeError)
-		return
-	}
-
-	/*
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(js)
-	*/
+	// Pull from cache
+	data := a.cache[dataKey]
 
 	w.Header().Set("Content-Encoding", "gzip")
-	gz := gzip.NewWriter(w)
-	defer gz.Close()
-	gz.Write(js)
+	w.Write(data)
 }
 
 // Write the appropriate message to the client.

@@ -30,11 +30,29 @@ var serveCmd = &cobra.Command{
 		// API Object
 		serveAPI = api.New(serveDB)
 
-		http.HandleFunc("/lookup", printURI(serveAPI.HandleLookup))
-		http.HandleFunc("/all", printURI(serveAPI.HandleAll))
+		http.HandleFunc("/lookup", middleware(serveAPI.HandleLookup, logMiddlewareHandler))
+		http.HandleFunc("/all", middleware(serveAPI.HandleAll, logMiddlewareHandler))
 		log.Info("Serving on port:", servePort)
 		http.ListenAndServe(":"+servePort, nil)
 	},
+}
+
+func middleware(primaryHandler http.HandlerFunc, middlewareHandlers ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
+	var next http.HandlerFunc
+	for _, mw := range middlewareHandlers {
+		next = mw(primaryHandler)
+	}
+	return next
+}
+
+func logMiddlewareHandler(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// stuff
+		log.Debug("recieved request:", r.Method, r.URL)
+
+		// Move to next handler
+		h.ServeHTTP(w, r)
+	}
 }
 
 func init() {
@@ -52,12 +70,4 @@ func init() {
 
 	serveCmd.Flags().StringVarP(
 		&collection, "db_collection", "", "classes", "Collection in database to insert classes.")
-}
-
-// Middleware to print requests out to the console.
-func printURI(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Debug(r)
-		fn(w, r)
-	}
 }

@@ -31,7 +31,7 @@ func addCommands() {
 
 func initializeConfig() {
 	if verbose {
-		log.SetLevel(log.InfoLevel)
+		log.SetLevel(log.DebugLevel)
 	}
 }
 

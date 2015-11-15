@@ -43,7 +43,7 @@ func TestPurge(t *testing.T) {
 	myDB := getDB()
 	myDB.Put(sampleClass)
 	myDB.Purge()
-	classes, err := myDB.GetAll(DetailComplete)
+	classes, err := myDB.GetAll(nil)
 	if err != nil {
 		t.Error(err)
 	}
