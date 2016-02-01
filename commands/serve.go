@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
 	"github.com/scheedule/coursestore/api"
@@ -30,29 +31,21 @@ var serveCmd = &cobra.Command{
 		// API Object
 		serveAPI = api.New(serveDB)
 
-		http.HandleFunc("/lookup", middleware(serveAPI.HandleLookup, logMiddlewareHandler))
-		http.HandleFunc("/all", middleware(serveAPI.HandleAll, logMiddlewareHandler))
+		// Router
+		r := mux.NewRouter()
+
+		// All classes
+		r.HandleFunc("/lookup", serveAPI.HandleAll)
+
+		// All classes in department
+		r.HandleFunc("/lookup/{department}", serveAPI.HandleDepartment)
+
+		// Specific Class
+		r.HandleFunc("/lookup/{department}/{number:[0-9]+}", serveAPI.HandleSingle)
+
 		log.Info("Serving on port:", servePort)
-		http.ListenAndServe(":"+servePort, nil)
+		http.ListenAndServe(":"+servePort, r)
 	},
-}
-
-func middleware(primaryHandler http.HandlerFunc, middlewareHandlers ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
-	var next http.HandlerFunc
-	for _, mw := range middlewareHandlers {
-		next = mw(primaryHandler)
-	}
-	return next
-}
-
-func logMiddlewareHandler(h http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// stuff
-		log.Debug("recieved request:", r.Method, r.URL)
-
-		// Move to next handler
-		h.ServeHTTP(w, r)
-	}
 }
 
 func init() {

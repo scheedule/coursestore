@@ -29,7 +29,7 @@ type (
 
 	// Type to unmarshal section data from the UIUC CISAPI
 	Section struct {
-		CRN              string    `xml:"id,attr" bson:"crn" json:"crn"`
+		CRN              int       `xml:"id,attr" bson:"crn" json:"crn"`
 		Code             string    `xml:"sectionNumber" bson:"code" json:"code"`
 		EnrollmentStatus string    `xml:"enrollmentStatus" bson:"enrollment_status" json:"enrollmentStatus,omitempty"`
 		Start            string    `xml:"startDate" bson:"start" json:"start,omitempty"`
@@ -41,7 +41,7 @@ type (
 	Class struct {
 		ID               bson.ObjectId `bson:"_id,omitempty" json:"-"`
 		Department       string        `bson:"department" json:"department"`
-		CourseNumber     string        `bson:"course_number" json:"courseNumber"`
+		CourseNumber     int           `bson:"course_number" json:"courseNumber"`
 		Name             string        `bson:"name" json:"name"`
 		Description      string        `bson:"description" json:"description,omitempty"`
 		CreditHours      string        `bson:"credit_hours" json:"creditHours,omitempty"`

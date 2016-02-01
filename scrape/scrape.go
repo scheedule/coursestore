@@ -5,6 +5,7 @@ package scrape
 import (
 	"encoding/xml"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -153,10 +154,12 @@ func digestClass(XMLData []byte) (*types.Class, error) {
 		}
 	}
 
+	courseNumber, _ := strconv.Atoi(strings.Split(course.Number, " ")[1])
+
 	// Create Class struct
 	class := &types.Class{
 		Department:       course.Subject.Department,
-		CourseNumber:     strings.Split(course.Number, " ")[1],
+		CourseNumber:     courseNumber,
 		Name:             course.Name,
 		Description:      course.Description,
 		CreditHours:      normalizeCreditHours(course.CreditHours),

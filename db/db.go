@@ -24,18 +24,25 @@ var (
 	InternalError error = errors.New("Internal Database Error")
 
 	// Detail levels
-	DetailBasic = bson.M{
-		"department":              "1",
-		"course_number":           "1",
-		"name":                    "1",
-		"sections":                "1",
-		"sections.crn":            "1",
-		"sections.code":           "1",
-		"sections.meetings":       "1",
-		"sections.meetings.type":  "1",
-		"sections.meetings.start": "1",
-		"sections.meetings.end":   "1",
-		"sections.meetings.days":  "1",
+	DetailLevels = map[string]interface{}{
+		"basic_single":     nil,
+		"basic_department": nil,
+		"basic_all": bson.M{
+			"department":              "1",
+			"course_number":           "1",
+			"name":                    "1",
+			"sections":                "1",
+			"sections.crn":            "1",
+			"sections.code":           "1",
+			"sections.meetings":       "1",
+			"sections.meetings.type":  "1",
+			"sections.meetings.start": "1",
+			"sections.meetings.end":   "1",
+			"sections.meetings.days":  "1",
+		},
+		"complete_single":     nil,
+		"complete_department": nil,
+		"complete_all":        nil,
 	}
 )
 
@@ -108,25 +115,46 @@ func (db *DB) Put(entry types.Class) error {
 }
 
 // Lookup Class in the database.
-func (db *DB) Lookup(department, number string) (*types.Class, error) {
-	temp := &types.Class{}
+func (db *DB) LookupSingle(department, number, detail string) (types.Class, error) {
+
+	proj := DetailLevels[detail+"_single"]
+
+	var result types.Class
 	err := db.collection.Find(bson.M{
 		"department":    department,
 		"course_number": number,
-	}).One(temp)
+	}).Select(proj).One(&result)
 
 	if err != nil {
 		log.Warn("failed to find class in database")
-		return nil, ClassNotFound
+		return result, ClassNotFound
 	}
 
-	return temp, nil
+	return result, nil
+}
+
+func (db *DB) LookupDepartment(department, detail string) ([]types.Class, error) {
+
+	proj := DetailLevels[detail+"_department"]
+
+	var result []types.Class
+	err := db.collection.Find(bson.M{
+		"department": department,
+	}).Select(proj).All(&result)
+	if err != nil {
+		log.Error("failed to collect all entries in the department")
+		return nil, InternalError
+	}
+	return result, nil
 }
 
 // Get All Class Names from the database.
-func (db *DB) GetAll(detail map[string]interface{}) ([]types.Class, error) {
+func (db *DB) LookupAll(detail string) ([]types.Class, error) {
+
+	proj := DetailLevels[detail+"_all"]
+
 	var result []types.Class
-	err := db.collection.Find(nil).Select(detail).All(&result)
+	err := db.collection.Find(nil).Select(proj).All(&result)
 	if err != nil {
 		log.Error("failed to collect all entries in the collection")
 		return nil, InternalError
