@@ -6,6 +6,7 @@ package db
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -119,10 +120,12 @@ func (db *DB) LookupSingle(department, number, detail string) (types.Class, erro
 
 	proj := DetailLevels[detail+"_single"]
 
+	courseNum, _ := strconv.Atoi(number)
+
 	var result types.Class
 	err := db.collection.Find(bson.M{
 		"department":    department,
-		"course_number": number,
+		"course_number": courseNum,
 	}).Select(proj).One(&result)
 
 	if err != nil {
